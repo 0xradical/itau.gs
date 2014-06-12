@@ -1,10 +1,9 @@
 // based on http://ctrlq.org/code/19053-send-to-google-drive
 function sendToGoogleDrive() {
 
-  var sheet = SpreadsheetApp.getActiveSheet();
-
   var gmailLabels           = 'inbox';
   var driveFolder           = 'Itaú Notifications';
+  var spreadsheetName       = 'itau';
   var archiveLabel          = 'itau.processed';
   var itauNotificationEmail = 'comunicacaodigital@itau-unibanco.com.br';
   var filter                = "from: " +
@@ -29,6 +28,21 @@ function sendToGoogleDrive() {
   } else {
     folder = DriveApp.createFolder(driveFolder);
   }
+
+  // Create spreadsheet file 'itau' if it doesn't exist
+  var file = folder.getFilesByName(spreadsheetName);
+
+  if (file.hasNext()){
+    file = file.next();
+  } else {
+    // https://developers.google.com/apps-script/reference/drive/folder?hl=pt-br#createFile(String,String,String)
+    // https://developers.google.com/apps-script/reference/base/mime-type?hl=pt-BR
+    // file = folder.createFile(spreadsheetName, '', MimeType.GOOGLE_SHEETS);
+    file = folder.createFile(spreadsheetName, null, MimeType.GOOGLE_SHEETS);
+  }
+
+  // https://developers.google.com/apps-script/reference/spreadsheet/spreadsheet-app?hl=pt-br#open(File)
+  var spreadsheet = SpreadsheetApp.open(file);
 
   var message, account, operation, value, date, hour, plainBody;
   var accountRegex = /Conta: (XXX[0-9\-]+)/;
@@ -87,33 +101,6 @@ function sendToGoogleDrive() {
     // }
 
     // threads[x].addLabel(moveToLabel);
-  }
-
-}
-
-
-function configure() {
-  reset();
-  ScriptApp.newTrigger("sendToGoogleDrive").timeBased().everyMinutes(5).create();
-  Browser.msgBox("Initialized", "The program is now running.", Browser.Buttons.OK);
-}
-
-function onOpen() {
-  var menu = [
-    { name: "Step 1: Authorize",   functionName: "configure" },
-    { name: "Step 2: Run Program", functionName: "configure" },
-    { name: "Uninstall (Stop)",    functionName: "reset"     }
-  ];
-
-  SpreadsheetApp.getActiveSpreadsheet().addMenu("Itaú Notifications", menu);
-}
-
-function reset() {
-
-  var triggers = ScriptApp.getProjectTriggers();
-
-  for (var i = 0; i < triggers.length; i++) {
-    ScriptApp.deleteTrigger(triggers[i]);
   }
 
 }
