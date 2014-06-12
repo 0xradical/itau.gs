@@ -17,7 +17,7 @@ function sendToGoogleDrive() {
   // Create label for 'itau.processed' if it doesn't exist
   var moveToLabel =  GmailApp.getUserLabelByName(archiveLabel);
 
-  if ( ! moveToLabel ) {
+  if (!moveToLabel) {
     moveToLabel = GmailApp.createLabel(archiveLabel);
   }
 
@@ -30,15 +30,48 @@ function sendToGoogleDrive() {
     folder = DriveApp.createFolder(driveFolder);
   }
 
+  var message, account, operation, value, date, hour, plainBody;
+  var accountRegex = /Conta: (XXX[0-9\-]+)/;
+  var operationRegex = /Tipo de operação: ([A-Z]+)/;
+  var valueRegex = /Valor: R\$ ([0-9\,]+)/;
+  var dateRegex = /Data: ([0-9\/]+)/;
+  var hourRegex = /Hora: ([0-9\:]+)/;
+
   var threads = GmailApp.search(filter, 0, 5);
 
-  for (var x = 0; x < threads.length; x++) {
+  // for (var x = 0; x < threads.length; x++) {
+  for (var x = 0; x < 1; x++) {
+    message = threads[x].getMessages()[0];
 
-    var message = threads[x].getMessages()[0];
+    plainBody = message.getPlainBody();
 
-    var plainBody = message.getPlainBody();
+    if(accountRegex.test(plainBody)) {
+      account = RegExp.$1;
+    }
 
-    Logger.log(e.toString());
+    if(operationRegex.test(plainBody)) {
+      operation = RegExp.$1;
+    }
+
+    if(valueRegex.test(plainBody)) {
+      value = RegExp.$1;
+    }
+
+    if(dateRegex.test(plainBody)) {
+      date = RegExp.$1;
+    }
+
+    if(hourRegex.test(plainBody)) {
+      hour = RegExp.$1;
+    }
+
+    Logger.log(account);
+    Logger.log(operation);
+    Logger.log(value);
+    Logger.log(date);
+    Logger.log(hour);
+
+    // Logger.log(plainBody);
 
     // var desc   = message.getSubject() + " #" + message.getId();
     // var att    = message.getAttachments();
