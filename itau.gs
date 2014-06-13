@@ -52,7 +52,10 @@ function sendToGoogleDrive() {
 
   var sheet = doc.getSheets()[0];
 
-  sheet.appendRow(["a man", "a plan", "panama"]);
+  // Append header if first line
+  if(sheet.getLastRow() == 0){
+    sheet.appendRow(['Conta', 'Operação', 'Valor', 'Data', 'Hora']);
+  }
 
   var message, account, operation, value, date, hour, plainBody;
   var accountRegex = /Conta: (XXX[0-9\-]+)/;
@@ -63,8 +66,7 @@ function sendToGoogleDrive() {
 
   var threads = GmailApp.search(filter, 0, 5);
 
-  // for (var x = 0; x < threads.length; x++) {
-  for (var x = 0; x < 1; x++) {
+  for (var x = 0; x < threads.length; x++) {
     message = threads[x].getMessages()[0];
 
     plainBody = message.getPlainBody();
@@ -89,28 +91,15 @@ function sendToGoogleDrive() {
       hour = RegExp.$1;
     }
 
-    Logger.log(account);
-    Logger.log(operation);
-    Logger.log(value);
-    Logger.log(date);
-    Logger.log(hour);
+    sheet.appendRow([account, operation, value, date, hour]);
 
-    // Logger.log(plainBody);
+    // Logger.log(account);
+    // Logger.log(operation);
+    // Logger.log(value);
+    // Logger.log(date);
+    // Logger.log(hour);
 
-    // var desc   = message.getSubject() + " #" + message.getId();
-    // var att    = message.getAttachments();
-
-    // for (var z = 0; z < att.length; z++) {
-    //   try {
-    //     file = folder.createFile(att[z]);
-    //     file.setDescription(desc);
-    //   }
-    //   catch (e) {
-    //     Logger.log(e.toString());
-    //   }
-    // }
-
-    // threads[x].addLabel(moveToLabel);
+    threads[x].addLabel(moveToLabel);
   }
 
 }
