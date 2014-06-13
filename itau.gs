@@ -21,28 +21,38 @@ function sendToGoogleDrive() {
   }
 
   // Create folder 'Itaú Notifications' if it doesn't exist
-  var folder = DriveApp.getFoldersByName(driveFolder);
+  var folders = DriveApp.getFoldersByName(driveFolder);
+  var folder;
 
-  if (folder.hasNext()) {
-    folder = folder.next();
+  if (folders.hasNext()) {
+    folder = folders.next();
   } else {
     folder = DriveApp.createFolder(driveFolder);
   }
 
   // Create spreadsheet file 'itau' if it doesn't exist
-  var file = folder.getFilesByName(spreadsheetName);
+  var files = folder.getFilesByName(spreadsheetName);
 
-  if (file.hasNext()){
-    file = file.next();
+  // File is in DriveApp
+  // Doc is in SpreadsheetApp
+  // They are not interchangeable
+  var file, doc;
+
+  // Confusing :\
+  // As per: https://code.google.com/p/google-apps-script-issues/issues/detail?id=3578
+  if (files.hasNext()){
+    file = files.next();
+    doc = SpreadsheetApp.openById(file.getId());
   } else {
-    // https://developers.google.com/apps-script/reference/drive/folder?hl=pt-br#createFile(String,String,String)
-    // https://developers.google.com/apps-script/reference/base/mime-type?hl=pt-BR
-    // file = folder.createFile(spreadsheetName, '', MimeType.GOOGLE_SHEETS);
-    file = folder.createFile(spreadsheetName, null, MimeType.GOOGLE_SHEETS);
+    doc = SpreadsheetApp.create(spreadsheetName);
+    file = DriveApp.getFileById(doc.getId());
+    folder.addFile(file);
+    DriveApp.removeFile(file);
   }
 
-  // https://developers.google.com/apps-script/reference/spreadsheet/spreadsheet-app?hl=pt-br#open(File)
-  var spreadsheet = SpreadsheetApp.open(file);
+  var sheet = doc.getSheets()[0];
+
+  sheet.appendRow(["a man", "a plan", "panama"]);
 
   var message, account, operation, value, date, hour, plainBody;
   var accountRegex = /Conta: (XXX[0-9\-]+)/;
