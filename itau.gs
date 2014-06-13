@@ -54,52 +54,73 @@ function sendToGoogleDrive() {
 
   // Append header if first line
   if(sheet.getLastRow() == 0){
-    sheet.appendRow(['Conta', 'Operação', 'Valor', 'Data', 'Hora']);
+    sheet.appendRow(['Conta', 'Operação', 'Valor', 'Data', 'Hora', 'Email ID']);
   }
 
-  var message, account, operation, value, date, hour, plainBody;
+  var message, messages, account, operation, value, date, hour, emailID, plainBody;
   var accountRegex = /Conta: (XXX[0-9\-]+)/;
   var operationRegex = /Tipo de operação: ([A-Z]+)/;
-  var valueRegex = /Valor: R\$ ([0-9\,]+)/;
+  var paymentRegex = /Pagamento de ([0-9A-Za-z\-]+)\ ?([0-9]+)?/;
+  var valueRegex = /Valor: R\$ ([0-9\,\.]+)/;
   var dateRegex = /Data: ([0-9\/]+)/;
   var hourRegex = /Hora: ([0-9\:]+)/;
+  var emailIDRegex = /E-mail nº ([0-9]+)/;
 
-  var threads = GmailApp.search(filter, 0, 5);
+  var threads = GmailApp.search(filter, 0, 100);
 
   for (var x = 0; x < threads.length; x++) {
-    message = threads[x].getMessages()[0];
+    messages = threads[x].getMessages();
 
-    plainBody = message.getPlainBody();
+    for (var i = 0; i < messages.length; i++) {
+      account, operation, value, date, hour, emailID = [];
 
-    if(accountRegex.test(plainBody)) {
-      account = RegExp.$1;
+      message = messages[i];
+
+      plainBody = message.getPlainBody();
+
+      if(accountRegex.test(plainBody)) {
+        account = RegExp.$1;
+      }
+
+      if(operationRegex.test(plainBody)) {
+        operation = RegExp.$1;
+      }
+
+      if(valueRegex.test(plainBody)) {
+        value = RegExp.$1;
+      }
+
+      if(dateRegex.test(plainBody)) {
+        date = RegExp.$1;
+      }
+
+      if(hourRegex.test(plainBody)) {
+        hour = RegExp.$1;
+      }
+
+      if(emailIDRegex.test(plainBody)){
+        emailID = RegExp.$1;
+      }
+
+      if(paymentRegex.test(plainBody)){
+        operation = RegExp.$1;
+        if(RegExp.$2){
+          operation += ' ' + RegExp.$2
+        }
+        date = hour = ' - ';
+      }
+
+      if(account && operation && value && date && hour){
+        sheet.appendRow([account, operation, value, date, hour, emailID]);
+      }
+
+      // Logger.log(account);
+      // Logger.log(operation);
+      // Logger.log(value);
+      // Logger.log(date);
+      // Logger.log(hour);
     }
-
-    if(operationRegex.test(plainBody)) {
-      operation = RegExp.$1;
-    }
-
-    if(valueRegex.test(plainBody)) {
-      value = RegExp.$1;
-    }
-
-    if(dateRegex.test(plainBody)) {
-      date = RegExp.$1;
-    }
-
-    if(hourRegex.test(plainBody)) {
-      hour = RegExp.$1;
-    }
-
-    sheet.appendRow([account, operation, value, date, hour]);
-
-    // Logger.log(account);
-    // Logger.log(operation);
-    // Logger.log(value);
-    // Logger.log(date);
-    // Logger.log(hour);
 
     threads[x].addLabel(moveToLabel);
   }
-
 }
